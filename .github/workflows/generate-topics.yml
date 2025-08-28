@@ -1,5 +1,9 @@
 name: Generate Software Interview Topics
 
+permissions:
+  contents: read
+  issues: write
+
 on:
   schedule:
     # Every Monday at 9:00 AM UTC (adjust timezone as needed)
