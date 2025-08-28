@@ -15,7 +15,7 @@ from typing import Dict, Any, List
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 from agents.interview_agent import InterviewTopicsAgent
-from database.mongodb_client import MongoDBClient
+from database.database_factory import DatabaseFactory
 
 # Configure logging
 logging.basicConfig(
@@ -30,11 +30,18 @@ logger = logging.getLogger(__name__)
 
 def validate_environment() -> Dict[str, str]:
     """Validate required environment variables"""
+    # Base required variables
     required_vars = {
-        'MONGODB_URI': 'MongoDB connection string',
         'GOOGLE_CLOUD_PROJECT': 'Google Cloud Project ID',
         'GOOGLE_APPLICATION_CREDENTIALS': 'Path to GCP service account key',
     }
+    
+    # Add database-specific variables based on provider
+    provider = os.getenv("DATABASE_PROVIDER", "MONGO").upper()
+    try:
+        DatabaseFactory.validate_provider_config()
+    except ValueError as e:
+        raise ValueError(f"Database configuration error: {e}")
     
     optional_vars = {
         'GEMINI_MODEL': 'gemini-pro',
@@ -94,10 +101,11 @@ async def main():
         
         logger.info(f"🎯 Generating {num_topics} topics (difficulty: {difficulty_focus}, model: {model})")
         
-        # Initialize MongoDB client
-        mongodb_client = MongoDBClient(env_vars['MONGODB_URI'])
-        await mongodb_client.connect()
-        logger.info("✅ Connected to MongoDB")
+        # Initialize database client
+        db_client = DatabaseFactory.create_client()
+        await db_client.connect()
+        provider = DatabaseFactory.get_provider_name()
+        logger.info(f"✅ Connected to {provider} database")
         
         # Initialize Google ADK agent
         interview_agent = InterviewTopicsAgent(
@@ -137,9 +145,9 @@ async def main():
             }
         }
         
-        # Save to MongoDB
-        result = await mongodb_client.insert_topics_document(document)
-        logger.info(f"✅ Saved to MongoDB: {result}")
+        # Save to database
+        result = await db_client.insert_topics_document(document)
+        logger.info(f"✅ Saved to {provider}: {result}")
         
         # Log success summary
         categories = {}
@@ -156,7 +164,7 @@ async def main():
         logger.info(f"   Categories: {dict(categories)}")
         logger.info(f"   Difficulties: {dict(difficulties)}")
         logger.info(f"   Run ID: {run_id}")
-        logger.info(f"   MongoDB Document ID: {result}")
+        logger.info(f"   {provider} Document ID: {result}")
         
         logger.info("🎉 Interview topics generation completed successfully!")
         
@@ -168,11 +176,10 @@ async def main():
     finally:
         # Cleanup
         try:
-            if 'mongodb_client' in locals():
-                await mongodb_client.close()
-                logger.info("✅ MongoDB connection closed")
+            if 'db_client' in locals():
+                await db_client.close()
         except Exception as e:
-            logger.warning(f"⚠️ Error closing MongoDB connection: {e}")
+            logger.warning(f"⚠️ Error closing database connection: {e}")
         
         try:
             if 'interview_agent' in locals():

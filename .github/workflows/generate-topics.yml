@@ -62,7 +62,12 @@ jobs:
     
     - name: Generate interview topics
       env:
+        # Database configuration
+        DATABASE_PROVIDER: ${{ secrets.DATABASE_PROVIDER || 'MONGO' }}
         MONGODB_URI: ${{ secrets.MONGODB_URI }}
+        FIREBASE_PROJECT_ID: ${{ secrets.FIREBASE_PROJECT_ID }}
+        FIREBASE_CREDENTIALS_JSON: ${{ secrets.FIREBASE_CREDENTIALS_JSON }}
+        # Google Cloud configuration
         GOOGLE_CLOUD_PROJECT: ${{ secrets.GOOGLE_CLOUD_PROJECT }}
         GEMINI_MODEL: ${{ secrets.GEMINI_MODEL || 'gemini-pro' }}
         NUM_TOPICS: ${{ github.event.inputs.num_topics || '15' }}
@@ -75,30 +80,46 @@ jobs:
     - name: Verify generation success
       if: success()
       env:
+        DATABASE_PROVIDER: ${{ secrets.DATABASE_PROVIDER || 'MONGO' }}
         MONGODB_URI: ${{ secrets.MONGODB_URI }}
+        FIREBASE_PROJECT_ID: ${{ secrets.FIREBASE_PROJECT_ID }}
+        FIREBASE_CREDENTIALS_JSON: ${{ secrets.FIREBASE_CREDENTIALS_JSON }}
+        GOOGLE_APPLICATION_CREDENTIALS: /tmp/gcp-key.json
         RUN_ID: ${{ github.run_id }}
       run: |
         python -c "
         import os
-        from pymongo import MongoClient
+        import sys
+        sys.path.insert(0, 'src')
+        from database.database_factory import DatabaseFactory
+        import asyncio
         
-        client = MongoClient(os.environ['MONGODB_URI'])
-        db = client.interview_topics
+        async def verify():
+            try:
+                # Create database client
+                db_client = DatabaseFactory.create_client()
+                await db_client.connect()
+                
+                # Verify the run was successful
+                run_id = f'github-{os.environ[\"RUN_ID\"]}-' + '$(date +%Y%m%d-%H%M%S)'
+                result = await db_client.get_topics_by_run_id(run_id)
+                
+                if result:
+                    topic_count = len(result.get('topics', []))
+                    print(f'✅ Successfully generated {topic_count} interview topics')
+                    print(f'📊 Run ID: {run_id}')
+                    print(f'🕒 Generated at: {result.get(\"generatedAt\")}')
+                else:
+                    print('❌ No topics found for this run')
+                    sys.exit(1)
+                
+                await db_client.close()
+                
+            except Exception as e:
+                print(f'❌ Verification failed: {e}')
+                sys.exit(1)
         
-        # Verify the run was successful
-        run_id = f'github-{os.environ[\"RUN_ID\"]}'
-        result = db.topics.find_one({'runId': run_id})
-        
-        if result:
-            topic_count = len(result.get('topics', []))
-            print(f'✅ Successfully generated {topic_count} interview topics')
-            print(f'📊 Run ID: {run_id}')
-            print(f'🕒 Generated at: {result.get(\"generatedAt\")}')
-        else:
-            print('❌ No topics found for this run')
-            exit(1)
-        
-        client.close()
+        asyncio.run(verify())
         "
     
     - name: Cleanup credentials
