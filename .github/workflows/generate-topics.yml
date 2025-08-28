@@ -60,7 +60,7 @@ jobs:
         NUM_TOPICS: ${{ github.event.inputs.num_topics || '15' }}
         DIFFICULTY_FOCUS: ${{ github.event.inputs.difficulty_focus || 'mixed' }}
         RUN_ID: ${{ github.run_id }}
-        GITHUB_SHA: ${{ github.sha }}
+        REPO_GITHUB_SHA: ${{ github.sha }}
       run: |
         python src/main.py
     

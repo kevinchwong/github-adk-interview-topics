@@ -41,7 +41,7 @@ def validate_environment() -> Dict[str, str]:
         'NUM_TOPICS': '15',
         'DIFFICULTY_FOCUS': 'mixed',
         'RUN_ID': f'local-{datetime.now().strftime("%Y%m%d-%H%M%S")}',
-        'GITHUB_SHA': 'local'
+        'REPO_GITHUB_SHA': 'local'
     }
     
     env_vars = {}
@@ -127,7 +127,7 @@ async def main():
             'parameters': {
                 'numTopics': num_topics,
                 'difficultyFocus': difficulty_focus,
-                'githubSha': env_vars['GITHUB_SHA']
+                'githubSha': env_vars['REPO_GITHUB_SHA']
             },
             'topics': topics,
             'metadata': {
