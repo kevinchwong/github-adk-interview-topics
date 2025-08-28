@@ -7,9 +7,6 @@ import logging
 import os
 from typing import Union, Dict
 
-from .mongodb_client import MongoDBClient
-from .firebase_client import FirebaseClient
-
 logger = logging.getLogger(__name__)
 
 
@@ -17,7 +14,7 @@ class DatabaseFactory:
     """Factory class for creating database clients based on provider configuration"""
     
     @staticmethod
-    def create_client() -> Union[MongoDBClient, FirebaseClient]:
+    def create_client():
         """Create appropriate database client based on DATABASE_PROVIDER environment variable"""
         
         provider = os.getenv("DATABASE_PROVIDER", "MONGO").upper()
@@ -30,8 +27,13 @@ class DatabaseFactory:
             raise ValueError(f"Unsupported database provider: {provider}. Supported: MONGO, FIREBASE")
     
     @staticmethod
-    def _create_mongodb_client() -> MongoDBClient:
+    def _create_mongodb_client():
         """Create MongoDB client"""
+        try:
+            from .mongodb_client import MongoDBClient
+        except ImportError as e:
+            raise ImportError(f"MongoDB dependencies not available: {e}")
+            
         mongodb_uri = os.getenv("MONGODB_URI")
         if not mongodb_uri:
             raise ValueError("MONGODB_URI environment variable is required for MongoDB provider")
@@ -40,8 +42,13 @@ class DatabaseFactory:
         return MongoDBClient(mongodb_uri)
     
     @staticmethod
-    def _create_firebase_client() -> FirebaseClient:
+    def _create_firebase_client():
         """Create Firebase client"""
+        try:
+            from .firebase_client import FirebaseClient
+        except ImportError as e:
+            raise ImportError(f"Firebase dependencies not available: {e}")
+            
         firebase_project_id = os.getenv("FIREBASE_PROJECT_ID")
         if not firebase_project_id:
             raise ValueError("FIREBASE_PROJECT_ID environment variable is required for Firebase provider")
@@ -90,7 +97,3 @@ class DatabaseFactory:
             raise ValueError(f"Required {provider} environment variables not set")
         
         return env_vars
-
-
-# Type alias for database clients
-DatabaseClient = Union[MongoDBClient, FirebaseClient]

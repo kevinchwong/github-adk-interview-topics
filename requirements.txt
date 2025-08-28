@@ -8,7 +8,7 @@ vertexai>=1.38.0
 # Database dependencies
 # MongoDB
 motor>=3.3.0
-pymongo>=4.6.0
+pymongo>=4.6.0,<4.10.0
 
 # Firebase
 firebase-admin>=6.2.0

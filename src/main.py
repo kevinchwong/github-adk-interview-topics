@@ -11,6 +11,13 @@ import logging
 from datetime import datetime, timezone
 from typing import Dict, Any, List
 
+# Load environment variables from .env file
+try:
+    from dotenv import load_dotenv
+    load_dotenv()
+except ImportError:
+    pass
+
 # Add src to path for imports
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 

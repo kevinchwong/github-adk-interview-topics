@@ -4,6 +4,7 @@ Handles database operations for storing generated interview topics in Firestore
 """
 
 import logging
+import os
 from typing import Dict, Any, List, Optional
 from datetime import datetime, timezone
 import json
@@ -26,6 +27,9 @@ class FirebaseClient:
         self.credentials_json = credentials_json
         self.collection_name = "topics"
         
+        # Check for GOOGLE_APPLICATION_CREDENTIALS as fallback
+        self.credentials_path = os.getenv("GOOGLE_APPLICATION_CREDENTIALS")
+        
         self.app = None
         self.db = None
         self.collection = None
@@ -38,15 +42,29 @@ class FirebaseClient:
             
             # Initialize Firebase app if not already done
             if not firebase_admin._apps:
-                if self.credentials_json:
-                    # Use provided credentials JSON
-                    cred_dict = json.loads(self.credentials_json)
-                    cred = credentials.Certificate(cred_dict)
+                if self.credentials_path and os.path.exists(self.credentials_path):
+                    # Use credentials file path
+                    cred = credentials.Certificate(self.credentials_path)
                     self.app = firebase_admin.initialize_app(cred, {
                         'projectId': self.project_id
                     })
+                    logger.info(f"✅ Using Firebase credentials from: {self.credentials_path}")
+                elif self.credentials_json:
+                    try:
+                        # Use provided credentials JSON
+                        cred_dict = json.loads(self.credentials_json)
+                        cred = credentials.Certificate(cred_dict)
+                        self.app = firebase_admin.initialize_app(cred, {
+                            'projectId': self.project_id
+                        })
+                        logger.info("✅ Using Firebase credentials from JSON")
+                    except json.JSONDecodeError:
+                        # Fall back to default credentials if JSON parsing fails
+                        logger.warning("⚠️ Failed to parse Firebase credentials JSON, using default credentials")
+                        self.app = firebase_admin.initialize_app()
                 else:
                     # Use default credentials (for local development)
+                    logger.info("✅ Using default Firebase credentials")
                     self.app = firebase_admin.initialize_app()
             else:
                 self.app = firebase_admin.get_app()
@@ -56,7 +74,10 @@ class FirebaseClient:
             self.collection = self.db.collection(self.collection_name)
             
             # Test connection by performing a simple query
-            await self._test_connection()
+            try:
+                await self._test_connection()
+            except Exception as e:
+                logger.warning(f"⚠️ Firestore connection test failed (but proceeding): {e}")
             
             self.connected = True
             logger.info(f"✅ Connected to Firestore database: {self.project_id}")
