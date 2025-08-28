@@ -1,0 +1,157 @@
+name: Generate Software Interview Topics
+
+on:
+  schedule:
+    # Every Monday at 9:00 AM UTC (adjust timezone as needed)
+    - cron: '0 9 * * MON'
+  
+  # Allow manual triggering
+  workflow_dispatch:
+    inputs:
+      num_topics:
+        description: 'Number of topics to generate'
+        required: false
+        default: '15'
+        type: string
+      difficulty_focus:
+        description: 'Focus difficulty level'
+        required: false
+        default: 'mixed'
+        type: choice
+        options:
+          - mixed
+          - junior
+          - mid-level
+          - senior
+          - staff
+
+jobs:
+  generate-interview-topics:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+    
+    - name: Set up Python 3.11
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.11'
+        cache: 'pip'
+    
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+    
+    - name: Set up Google Cloud credentials
+      env:
+        GOOGLE_APPLICATION_CREDENTIALS_JSON: ${{ secrets.GOOGLE_APPLICATION_CREDENTIALS_JSON }}
+      run: |
+        echo "$GOOGLE_APPLICATION_CREDENTIALS_JSON" > /tmp/gcp-key.json
+        echo "GOOGLE_APPLICATION_CREDENTIALS=/tmp/gcp-key.json" >> $GITHUB_ENV
+    
+    - name: Generate interview topics
+      env:
+        MONGODB_URI: ${{ secrets.MONGODB_URI }}
+        GOOGLE_CLOUD_PROJECT: ${{ secrets.GOOGLE_CLOUD_PROJECT }}
+        GEMINI_MODEL: ${{ secrets.GEMINI_MODEL || 'gemini-pro' }}
+        NUM_TOPICS: ${{ github.event.inputs.num_topics || '15' }}
+        DIFFICULTY_FOCUS: ${{ github.event.inputs.difficulty_focus || 'mixed' }}
+        RUN_ID: ${{ github.run_id }}
+        GITHUB_SHA: ${{ github.sha }}
+      run: |
+        python src/main.py
+    
+    - name: Verify generation success
+      env:
+        MONGODB_URI: ${{ secrets.MONGODB_URI }}
+        RUN_ID: ${{ github.run_id }}
+      run: |
+        python -c "
+        import os
+        from pymongo import MongoClient
+        
+        client = MongoClient(os.environ['MONGODB_URI'])
+        db = client.interview_topics
+        
+        # Verify the run was successful
+        run_id = f'github-{os.environ[\"RUN_ID\"]}'
+        result = db.topics.find_one({'runId': run_id})
+        
+        if result:
+            topic_count = len(result.get('topics', []))
+            print(f'✅ Successfully generated {topic_count} interview topics')
+            print(f'📊 Run ID: {run_id}')
+            print(f'🕒 Generated at: {result.get(\"generatedAt\")}')
+        else:
+            print('❌ No topics found for this run')
+            exit(1)
+        
+        client.close()
+        "
+    
+    - name: Cleanup credentials
+      if: always()
+      run: |
+        rm -f /tmp/gcp-key.json
+    
+    - name: Comment on commit (if push trigger)
+      if: github.event_name == 'push'
+      uses: actions/github-script@v7
+      with:
+        script: |
+          const runId = context.runId;
+          const sha = context.sha;
+          
+          github.rest.repos.createCommitComment({
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            commit_sha: sha,
+            body: `🤖 **Interview Topics Generated**
+            
+            ✅ GitHub Actions workflow completed successfully
+            📊 Run ID: github-${runId}
+            🕒 Generated at: ${new Date().toISOString()}
+            
+            Check your MongoDB on Railway for the new interview topics!`
+          });
+
+# Optional: Notify on failure
+on_failure_notification:
+  runs-on: ubuntu-latest
+  needs: generate-interview-topics
+  if: failure()
+  
+  steps:
+  - name: Notify failure
+    uses: actions/github-script@v7
+    with:
+      script: |
+        const issue_body = `🚨 **Interview Topics Generation Failed**
+        
+        The scheduled interview topics generation workflow failed.
+        
+        **Details:**
+        - Run ID: ${context.runId}
+        - Workflow: ${context.workflow}
+        - Triggered by: ${context.eventName}
+        - Timestamp: ${new Date().toISOString()}
+        
+        Please check the [workflow logs](${context.payload.repository.html_url}/actions/runs/${context.runId}) for details.
+        
+        **Common fixes:**
+        - Check MongoDB connection string
+        - Verify Google Cloud credentials
+        - Ensure Vertex AI API is enabled
+        - Check if quota limits were exceeded
+        `;
+        
+        github.rest.issues.create({
+          owner: context.repo.owner,
+          repo: context.repo.repo,
+          title: `🚨 Interview Topics Generation Failed - ${new Date().toISOString().split('T')[0]}`,
+          body: issue_body,
+          labels: ['bug', 'automation', 'urgent']
+        });

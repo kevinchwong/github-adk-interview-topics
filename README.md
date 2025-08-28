@@ -234,4 +234,4 @@ db.interview_topics.find({"topics.technologies": "React"})
 
 ## 📄 License
 
-MIT - See LICENSE file for details# github-adk-interview-topics
+MIT - See LICENSE file for details
