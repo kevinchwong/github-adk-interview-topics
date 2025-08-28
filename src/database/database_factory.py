@@ -19,6 +19,8 @@ class DatabaseFactory:
         
         provider = os.getenv("DATABASE_PROVIDER", "MONGO").upper()
         
+        logger.info(f"🔧 [create_client] Creating database client for provider: {provider}")
+        
         if provider == "MONGO":
             return DatabaseFactory._create_mongodb_client()
         elif provider == "FIREBASE":
