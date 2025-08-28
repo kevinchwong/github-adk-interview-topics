@@ -25,9 +25,10 @@ logger = logging.getLogger(__name__)
 class InterviewTopicsAgent:
     """Google ADK agent for generating software interview topics"""
     
-    def __init__(self, project_id: str, model_name: str = "gemini-pro"):
+    def __init__(self, project_id: str, model_name: str = "gemini-pro", max_output_tokens: int = 8000):
         self.project_id = project_id
         self.model_name = model_name
+        self.max_output_tokens = max_output_tokens
         self.model = None
         self.initialized = False
         
@@ -145,7 +146,7 @@ Generate exactly {num_topics} topics and return only the JSON array."""
                 temperature=0.8,  # Creative but not too random
                 top_p=0.9,
                 top_k=40,
-                max_output_tokens=4000,  # Ensure enough space for all topics
+                max_output_tokens=self.max_output_tokens,  # Configurable token limit
             )
             
             # Generate content

@@ -52,6 +52,7 @@ def validate_environment() -> Dict[str, str]:
     
     optional_vars = {
         'GEMINI_MODEL': 'gemini-pro',
+        'MAX_OUTPUT_TOKENS': '8000',
         'NUM_TOPICS': '15',
         'DIFFICULTY_FOCUS': 'mixed',
         'RUN_ID': f'local-{datetime.now().strftime("%Y%m%d-%H%M%S")}',
@@ -115,9 +116,11 @@ async def main():
         logger.info(f"✅ Connected to {provider} database")
         
         # Initialize Google ADK agent
+        max_tokens = int(env_vars['MAX_OUTPUT_TOKENS'])
         interview_agent = InterviewTopicsAgent(
             project_id=env_vars['GOOGLE_CLOUD_PROJECT'],
-            model_name=model
+            model_name=model,
+            max_output_tokens=max_tokens
         )
         await interview_agent.initialize()
         logger.info("✅ Initialized Google ADK Interview Agent")

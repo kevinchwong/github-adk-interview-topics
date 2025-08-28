@@ -69,7 +69,8 @@ jobs:
         FIREBASE_CREDENTIALS_JSON: ${{ secrets.FIREBASE_CREDENTIALS_JSON }}
         # Google Cloud configuration
         GOOGLE_CLOUD_PROJECT: ${{ secrets.GOOGLE_CLOUD_PROJECT }}
-        GEMINI_MODEL: ${{ secrets.GEMINI_MODEL || 'gemini-pro' }}
+        GEMINI_MODEL: ${{ secrets.GEMINI_MODEL || 'gemini-1.5-flash' }}
+        MAX_OUTPUT_TOKENS: ${{ secrets.MAX_OUTPUT_TOKENS || '8000' }}
         NUM_TOPICS: ${{ github.event.inputs.num_topics || '15' }}
         DIFFICULTY_FOCUS: ${{ github.event.inputs.difficulty_focus || 'mixed' }}
         RUN_ID: ${{ github.run_id }}
