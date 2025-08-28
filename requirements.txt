@@ -9,14 +9,8 @@ vertexai>=1.38.0
 motor>=3.3.0
 pymongo>=4.6.0
 
-# Core Python dependencies
-asyncio
-logging
-json
-datetime
-typing
-os
-sys
+# Core Python dependencies (built-in modules - no installation needed)
+# asyncio, logging, json, datetime, typing, os, sys are built-in
 
 # Development and testing
 pytest>=7.4.0
