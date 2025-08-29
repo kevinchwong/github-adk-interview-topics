@@ -68,5 +68,68 @@ SAMPLE_TOPICS = [
         "keyPoints": ["RESTful design", "Authentication", "Rate limiting", "Versioning strategies"],
         "duration": 40,
         "technologies": ["REST", "OAuth", "API Gateway", "OpenAPI"]
+    },
+    {
+        "title": "Unit Testing Strategy Implementation",
+        "category": "testing_quality",
+        "difficulty": "mid-level",
+        "description": "Develop a comprehensive testing strategy for a new feature with complex business logic.",
+        "keyPoints": ["Test coverage", "Test pyramids", "Mocking strategies", "CI/CD integration"],
+        "duration": 35,
+        "technologies": ["Jest", "Testing Library", "Cypress", "GitHub Actions"]
+    },
+    {
+        "title": "CI/CD Pipeline Design",
+        "category": "devops_deployment",
+        "difficulty": "senior",
+        "description": "Design and implement a robust CI/CD pipeline for a multi-service application.",
+        "keyPoints": ["Pipeline stages", "Security scanning", "Blue-green deployment", "Rollback strategies"],
+        "duration": 50,
+        "technologies": ["Jenkins", "Docker", "AWS", "Terraform"]
+    },
+    {
+        "title": "Debugging Production Memory Leaks",
+        "category": "debugging_troubleshooting",
+        "difficulty": "senior",
+        "description": "Identify and resolve memory leaks in a production Node.js application.",
+        "keyPoints": ["Memory profiling", "Heap analysis", "Monitoring setup", "Prevention strategies"],
+        "duration": 45,
+        "technologies": ["Node.js", "Memory Profiler", "New Relic", "Chrome DevTools"]
+    },
+    {
+        "title": "Junior Developer Onboarding",
+        "category": "behavioral",
+        "difficulty": "mid-level",
+        "description": "Describe your approach to onboarding and mentoring new junior developers.",
+        "keyPoints": ["Learning plans", "Code reviews", "Pair programming", "Progress tracking"],
+        "duration": 25,
+        "technologies": ["Mentoring", "Documentation", "Code Review Tools"]
+    },
+    {
+        "title": "Algorithm Complexity Analysis",
+        "category": "technical_coding",
+        "difficulty": "junior",
+        "description": "Analyze the time and space complexity of common algorithms and data structures.",
+        "keyPoints": ["Big O notation", "Trade-offs", "Optimization techniques", "Real-world applications"],
+        "duration": 30,
+        "technologies": ["Data Structures", "Algorithms", "Python", "JavaScript"]
+    },
+    {
+        "title": "Cloud Migration Planning",
+        "category": "system_design",
+        "difficulty": "staff",
+        "description": "Plan the migration of a legacy on-premises system to cloud infrastructure.",
+        "keyPoints": ["Migration strategies", "Cost analysis", "Risk assessment", "Timeline planning"],
+        "duration": 60,
+        "technologies": ["AWS", "Azure", "Kubernetes", "Migration Tools"]
+    },
+    {
+        "title": "Code Review Best Practices",
+        "category": "testing_quality",
+        "difficulty": "junior",
+        "description": "Discuss effective code review practices and how to give constructive feedback.",
+        "keyPoints": ["Review criteria", "Feedback delivery", "Security considerations", "Documentation"],
+        "duration": 25,
+        "technologies": ["Git", "GitHub", "Code Review Tools"]
     }
 ]
