@@ -302,11 +302,11 @@ if __name__ == "__main__":
     import os
     import sys
     
-    project_id = os.getenv("FIREBASE_PROJECT_ID")
-    credentials_json = os.getenv("FIREBASE_CREDENTIALS_JSON")
+    project_id = os.getenv("GOOGLE_CLOUD_PROJECT")
+    credentials_json = os.getenv("GOOGLE_APPLICATION_CREDENTIALS_JSON")
     
     if not project_id:
-        print("❌ FIREBASE_PROJECT_ID environment variable not set")
+        print("❌ GOOGLE_CLOUD_PROJECT environment variable not set")
         sys.exit(1)
     
     async def main():

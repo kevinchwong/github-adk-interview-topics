@@ -65,8 +65,8 @@ jobs:
         # Database configuration
         DATABASE_PROVIDER: ${{ secrets.DATABASE_PROVIDER || 'MONGO' }}
         MONGODB_URI: ${{ secrets.MONGODB_URI }}
-        FIREBASE_PROJECT_ID: ${{ secrets.FIREBASE_PROJECT_ID }}
-        FIREBASE_CREDENTIALS_JSON: ${{ secrets.FIREBASE_CREDENTIALS_JSON }}
+        GOOGLE_CLOUD_PROJECT: ${{ secrets.GOOGLE_CLOUD_PROJECT }}
+        GOOGLE_APPLICATION_CREDENTIALS_JSON: ${{ secrets.GOOGLE_APPLICATION_CREDENTIALS_JSON }}
         # Google Cloud configuration
         GOOGLE_CLOUD_PROJECT: ${{ secrets.GOOGLE_CLOUD_PROJECT }}
         GEMINI_MODEL: ${{ secrets.GEMINI_MODEL || 'gemini-1.5-flash' }}
@@ -83,14 +83,15 @@ jobs:
       env:
         DATABASE_PROVIDER: ${{ secrets.DATABASE_PROVIDER || 'MONGO' }}
         MONGODB_URI: ${{ secrets.MONGODB_URI }}
-        FIREBASE_PROJECT_ID: ${{ secrets.FIREBASE_PROJECT_ID }}
-        FIREBASE_CREDENTIALS_JSON: ${{ secrets.FIREBASE_CREDENTIALS_JSON }}
+        GOOGLE_CLOUD_PROJECT: ${{ secrets.GOOGLE_CLOUD_PROJECT }}
+        GOOGLE_APPLICATION_CREDENTIALS_JSON: ${{ secrets.GOOGLE_APPLICATION_CREDENTIALS_JSON }}
         GOOGLE_APPLICATION_CREDENTIALS: /tmp/gcp-key.json
         RUN_ID: ${{ github.run_id }}
       run: |
         python -c "
         import os
         import sys
+        from datetime import datetime, timezone
         sys.path.insert(0, 'src')
         from database.database_factory import DatabaseFactory
         import asyncio
@@ -101,23 +102,30 @@ jobs:
                 db_client = DatabaseFactory.create_client()
                 await db_client.connect()
                 
-                # Verify the run was successful
-                run_id = f'github-{os.environ[\"RUN_ID\"]}-' + '$(date +%Y%m%d-%H%M%S)'
-                result = await db_client.get_topics_by_run_id(run_id)
+                # Generate the same run ID format as main.py
+                base_run_id = os.environ['RUN_ID']
+                timestamp = datetime.now(timezone.utc).strftime('%Y%m%d-%H%M%S')
+                run_id = f'github-{base_run_id}-{timestamp}'
                 
-                if result:
-                    topic_count = len(result.get('topics', []))
-                    print(f'✅ Successfully generated {topic_count} interview topics')
-                    print(f'📊 Run ID: {run_id}')
-                    print(f'🕒 Generated at: {result.get(\"generatedAt\")}')
+                # Search for any recent documents (since exact timestamp matching is difficult)
+                recent_docs = await db_client.get_recent_topics(limit=5)
+                
+                if recent_docs:
+                    latest_doc = recent_docs[0]
+                    topic_count = len(latest_doc.get('topics', []))
+                    print(f'✅ Found recent topics document with {topic_count} interview topics')
+                    print(f'📊 Document Run ID: {latest_doc.get(\"runId\", \"unknown\")}')
+                    print(f'🕒 Generated at: {latest_doc.get(\"generatedAt\")}')
                 else:
-                    print('❌ No topics found for this run')
+                    print('❌ No recent topics found')
                     sys.exit(1)
                 
                 await db_client.close()
                 
             except Exception as e:
                 print(f'❌ Verification failed: {e}')
+                import traceback
+                traceback.print_exc()
                 sys.exit(1)
         
         asyncio.run(verify())

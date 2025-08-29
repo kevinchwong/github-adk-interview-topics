@@ -51,14 +51,14 @@ class DatabaseFactory:
         except ImportError as e:
             raise ImportError(f"Firebase dependencies not available: {e}")
             
-        firebase_project_id = os.getenv("FIREBASE_PROJECT_ID")
-        if not firebase_project_id:
-            raise ValueError("FIREBASE_PROJECT_ID environment variable is required for Firebase provider")
+        GOOGLE_CLOUD_PROJECT = os.getenv("GOOGLE_CLOUD_PROJECT")
+        if not GOOGLE_CLOUD_PROJECT:
+            raise ValueError("GOOGLE_CLOUD_PROJECT environment variable is required for Firebase provider")
         
-        firebase_credentials = os.getenv("FIREBASE_CREDENTIALS_JSON")
+        firebase_credentials = os.getenv("GOOGLE_APPLICATION_CREDENTIALS_JSON")
         
         logger.info("🔧 Creating Firebase client")
-        return FirebaseClient(firebase_project_id, firebase_credentials)
+        return FirebaseClient(GOOGLE_CLOUD_PROJECT, firebase_credentials)
     
     @staticmethod
     def get_provider_name() -> str:
@@ -76,9 +76,9 @@ class DatabaseFactory:
             }
         elif provider == "FIREBASE":
             required_vars = {
-                'FIREBASE_PROJECT_ID': 'Firebase project ID'
+                'GOOGLE_CLOUD_PROJECT': 'Firebase project ID'
             }
-            # FIREBASE_CREDENTIALS_JSON is optional (can use default auth)
+            # GOOGLE_APPLICATION_CREDENTIALS_JSON is optional (can use default auth)
         else:
             raise ValueError(f"Unsupported database provider: {provider}")
         
