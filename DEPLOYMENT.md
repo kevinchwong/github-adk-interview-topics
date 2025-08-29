@@ -56,10 +56,9 @@ cd github-adk-interview-topics
 **Required Secrets:**
 - `GOOGLE_APPLICATION_CREDENTIALS_JSON`: Service account JSON content
 - `GOOGLE_CLOUD_PROJECT`: Your GCP project ID
-- `GOOGLE_APPLICATION_CREDENTIALS_JSON`: Contents of service account JSON file
 
 **Optional Secrets:**
-- `GEMINI_MODEL`: `gemini-pro` (default)
+- `GEMINI_MODEL`: `gemini-2.5-flash` (default)
 
 ### 4. Test Deployment
 ```bash

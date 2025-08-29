@@ -12,6 +12,9 @@ gcp-key.json
 __pycache__/
 *.py[cod]
 *$py.class
+*.pyc
+*.pyo
+*.env
 *.so
 .Python
 build/

@@ -40,18 +40,21 @@ def validate_environment() -> Dict[str, str]:
     # Base required variables
     required_vars = {
         'GOOGLE_CLOUD_PROJECT': 'Google Cloud Project ID',
-        'GOOGLE_APPLICATION_CREDENTIALS': 'Path to GCP service account key',
     }
     
+    # ADK can use either GOOGLE_APPLICATION_CREDENTIALS or GOOGLE_APPLICATION_CREDENTIALS_JSON
+    has_credentials = os.getenv('GOOGLE_APPLICATION_CREDENTIALS') or os.getenv('GOOGLE_APPLICATION_CREDENTIALS_JSON')
+    if not has_credentials:
+        required_vars['GOOGLE_APPLICATION_CREDENTIALS'] = 'Path to GCP service account key OR GOOGLE_APPLICATION_CREDENTIALS_JSON'
+    
     # Add database-specific variables based on provider
-    provider = os.getenv("DATABASE_PROVIDER", "MONGO").upper()
     try:
         DatabaseFactory.validate_provider_config()
     except ValueError as e:
         raise ValueError(f"Database configuration error: {e}")
     
     optional_vars = {
-        'GEMINI_MODEL': 'gemini-pro',
+        'GEMINI_MODEL': 'gemini-2.0-flash',
         'MAX_OUTPUT_TOKENS': '8000',
         'NUM_TOPICS': '15',
         'DIFFICULTY_FOCUS': 'mixed',
