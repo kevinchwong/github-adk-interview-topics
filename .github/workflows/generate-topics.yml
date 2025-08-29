@@ -63,8 +63,7 @@ jobs:
     - name: Generate interview topics
       env:
         # Database configuration
-        DATABASE_PROVIDER: ${{ secrets.DATABASE_PROVIDER || 'MONGO' }}
-        MONGODB_URI: ${{ secrets.MONGODB_URI }}
+        DATABASE_PROVIDER: 'FIREBASE'
         # Google Cloud configuration
         GOOGLE_CLOUD_PROJECT: ${{ secrets.GOOGLE_CLOUD_PROJECT }}
         GOOGLE_APPLICATION_CREDENTIALS_JSON: ${{ secrets.GOOGLE_APPLICATION_CREDENTIALS_JSON }}
@@ -80,8 +79,7 @@ jobs:
     - name: Verify generation success
       if: success()
       env:
-        DATABASE_PROVIDER: ${{ secrets.DATABASE_PROVIDER || 'MONGO' }}
-        MONGODB_URI: ${{ secrets.MONGODB_URI }}
+        DATABASE_PROVIDER: 'FIREBASE'
         # Google Cloud configuration
         GOOGLE_CLOUD_PROJECT: ${{ secrets.GOOGLE_CLOUD_PROJECT }}
         GOOGLE_APPLICATION_CREDENTIALS_JSON: ${{ secrets.GOOGLE_APPLICATION_CREDENTIALS_JSON }}
@@ -149,7 +147,7 @@ jobs:
           console.log(`🤖 Interview Topics Generated Successfully`);
           console.log(`📊 Run ID: github-${runId}`);
           console.log(`🕒 Generated at: ${new Date().toISOString()}`);
-          console.log(`Check your MongoDB on Railway for the new interview topics!`);
+          console.log(`Check your Firebase Firestore for the new interview topics!`);
 
   # Optional: Notify on failure
   on-failure-notification:
@@ -177,10 +175,10 @@ jobs:
           Please check the [workflow logs](${context.payload.repository.html_url}/actions/runs/${context.runId}) for details.
           
           **Common fixes:**
-          - Check MongoDB connection string
-          - Verify Google Cloud credentials
+          - Verify Google Cloud credentials and Firestore permissions
           - Ensure Vertex AI API is enabled
           - Check if quota limits were exceeded
+          - Verify GOOGLE_CLOUD_PROJECT is set correctly
           `;
           
           github.rest.issues.create({

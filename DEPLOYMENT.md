@@ -1,13 +1,13 @@
 # Deployment Guide: Software Interview Topics Generator
 
-**GitHub Actions + Google ADK + MongoDB on Railway**
+**GitHub Actions + Google ADK + Firebase Firestore**
 
 ## 🎯 Architecture Overview
 
 ```
 ┌─────────────────┐    ┌──────────────────┐    ┌─────────────────┐
-│  GitHub Actions │───▶│   Google ADK     │───▶│  MongoDB        │
-│  (Scheduler)    │    │   (AI Agent)     │    │  (Railway)      │
+│  GitHub Actions │───▶│   Google ADK     │───▶│  Firebase       │
+│  (Scheduler)    │    │   (AI Agent)     │    │  Firestore      │
 │  - Cron trigger │    │  - Gemini model  │    │ - Data storage  │
 │  - Secrets mgmt │    │  - Topic gen     │    │ - Query API     │
 └─────────────────┘    └──────────────────┘    └─────────────────┘
@@ -15,15 +15,13 @@
 
 ## 🚀 Quick Deployment (5 minutes)
 
-### 1. Railway Setup
+### 1. Firebase Setup
 ```bash
-# Create Railway project
-railway login
-railway new github-adk-interview-topics
+# Create Firebase project
+firebase projects:create your-interview-project
 
-# Add MongoDB service
-railway add mongodb
-# Copy the connection string from Railway dashboard
+# Enable Firestore
+firebase firestore:enable --project your-interview-project
 ```
 
 ### 2. Google Cloud Setup
@@ -56,7 +54,7 @@ cd github-adk-interview-topics
 ```
 
 **Required Secrets:**
-- `MONGODB_URI`: `mongodb+srv://...` (from Railway)
+- `GOOGLE_APPLICATION_CREDENTIALS_JSON`: Service account JSON content
 - `GOOGLE_CLOUD_PROJECT`: Your GCP project ID
 - `GOOGLE_APPLICATION_CREDENTIALS_JSON`: Contents of service account JSON file
 
@@ -71,28 +69,34 @@ cd github-adk-interview-topics
 
 ## 📋 Detailed Setup Instructions
 
-### Railway MongoDB Configuration
+### Firebase Firestore Configuration
 
-1. **Create Railway Project**
+1. **Create Firebase Project**
    ```bash
-   railway new github-adk-interview-topics
-   cd github-adk-interview-topics
+   # Via Firebase CLI
+   firebase projects:create your-interview-project
+   firebase use your-interview-project
    ```
 
-2. **Add MongoDB Service**
-   - In Railway dashboard: "New" → "Database" → "MongoDB"
-   - Wait for deployment (2-3 minutes)
-   - Copy connection string from "Connect" tab
-
-3. **MongoDB Connection String Format**
+2. **Enable Firestore Database**
+   ```bash
+   # Enable Firestore in native mode
+   firebase firestore:enable --project your-interview-project
    ```
-   mongodb+srv://mongo:PASSWORD@HOSTNAME/railway?retryWrites=true&w=majority
+
+3. **Create Service Account**
+   ```bash
+   # Create service account with Firestore permissions
+   gcloud iam service-accounts create interview-bot --project your-interview-project
+   gcloud projects add-iam-policy-binding your-interview-project \
+     --member="serviceAccount:interview-bot@your-interview-project.iam.gserviceaccount.com" \
+     --role="roles/datastore.user"
    ```
 
 4. **Test Connection** (optional)
    ```bash
-   # Install MongoDB tools locally
-   mongosh "mongodb+srv://mongo:PASSWORD@HOSTNAME/railway"
+   # Test via Python
+   python src/database/firebase_client.py
    ```
 
 ### Google Cloud Platform Setup
@@ -238,11 +242,11 @@ self.categories = {
 - **Rotate service account keys quarterly**
 - **Use minimal IAM permissions**
 
-### MongoDB Security
-- **Railway manages security by default**
-- **Use connection string authentication**
-- **Enable IP allowlisting if needed**
-- **Monitor connection logs**
+### Firestore Security
+- **Google manages security by default**
+- **Use service account authentication**
+- **Configure Firestore security rules**
+- **Monitor access logs in Google Cloud Console**
 
 ### Runtime Security
 ```dockerfile
@@ -261,19 +265,13 @@ FROM python:3.11-slim
    - Check workflow execution in "Actions" tab
    - Look for "Successfully generated X interview topics"
 
-2. **MongoDB Verification**
+2. **Firestore Verification**
    ```bash
-   # Connect to MongoDB
-   mongosh "mongodb+srv://..."
+   # Test connection
+   python src/database/firebase_client.py
    
-   # Check latest entries
-   db.topics.find().sort({generatedAt: -1}).limit(1)
-   
-   # Count total topics
-   db.topics.aggregate([
-     {$unwind: "$topics"},
-     {$count: "totalTopics"}
-   ])
+   # Or check via Firebase Console
+   # Visit: https://console.firebase.google.com/project/YOUR_PROJECT/firestore
    ```
 
 ### Common Issues & Solutions
@@ -281,10 +279,10 @@ FROM python:3.11-slim
 | Issue | Symptoms | Solution |
 |-------|----------|----------|
 | **Google Auth Error** | `401 Unauthorized` | Verify service account JSON and project ID |
-| **MongoDB Connection** | `Connection timeout` | Check Railway MongoDB status and URI |
+| **Firestore Connection** | `Connection timeout` | Check service account permissions and project ID |
 | **Workflow Timeout** | Job cancelled after 15min | Reduce `NUM_TOPICS` or increase timeout |
 | **Topic Generation Failed** | Empty topics array | Check Gemini API quotas and model availability |
-| **Duplicate Run ID** | MongoDB insert error | Check for concurrent executions |
+| **Duplicate Run ID** | Firestore insert error | Check for concurrent executions |
 
 ### Debug Mode
 
@@ -297,12 +295,12 @@ env:
 
 ## 🚀 Production Deployment Checklist
 
-- [ ] Railway MongoDB service deployed and accessible
+- [ ] Firebase Firestore database enabled and accessible
 - [ ] Google Cloud project with Vertex AI enabled
 - [ ] Service account created with minimal permissions
 - [ ] GitHub repository secrets configured
 - [ ] Workflow tested with manual trigger
-- [ ] MongoDB indexes verified
+- [ ] Firestore security rules configured
 - [ ] Cost monitoring enabled
 - [ ] Error notifications configured
 - [ ] Documentation updated for team
@@ -322,8 +320,9 @@ env:
 
 ### Performance Optimization
 - **Batch processing**: Generate topics for multiple weeks at once
-- **Caching**: Store common topic templates
+- **Caching**: Store common topic templates in Firestore
 - **Parallel execution**: Generate different categories concurrently
+- **Firestore indexes**: Optimize queries with composite indexes
 
 ---
 

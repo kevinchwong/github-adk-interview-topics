@@ -1,8 +1,8 @@
 # Software Interview Topics Generator
 
-**GitHub Actions + Google ADK + MongoDB on Railway**
+**GitHub Actions + Google ADK + Firebase Firestore**
 
-Generate high-quality software engineering interview discussion topics using GitHub Actions workflow automation, Google Agent Development Kit for AI generation, and MongoDB for data persistence on Railway.
+Generate high-quality software engineering interview discussion topics using GitHub Actions workflow automation, Google Agent Development Kit for AI generation, and Firebase Firestore for data persistence.
 
 ## 🏗️ Architecture
 
@@ -11,12 +11,12 @@ GitHub Actions (Scheduler)
     ↓
 Google ADK Agent (Topic Generation)
     ↓
-MongoDB on Railway (Storage)
+Firebase Firestore (Storage)
 ```
 
 - **Trigger**: GitHub Actions cron schedule (daily/weekly)
 - **AI Generation**: Google ADK with Gemini for structured topic creation
-- **Database**: MongoDB service deployed on Railway
+- **Database**: Firebase Firestore
 - **Deployment**: Containerized Python application with ADK
 
 ## 🎯 What This Generates
@@ -48,10 +48,10 @@ git clone <your-fork>
 cd github-adk-project
 ```
 
-### 2. Railway Setup
-1. Create Railway project
-2. Add MongoDB service → copy connection string
-3. Note: No additional Railway services needed (GitHub Actions handles execution)
+### 2. Firebase Setup
+1. Create Firebase project
+2. Enable Firestore database
+3. Create service account with Firestore permissions
 
 ### 3. Google ADK Setup
 1. Get Google Cloud Project with Vertex AI enabled
@@ -61,7 +61,7 @@ cd github-adk-project
 ### 4. GitHub Secrets
 Set these repository secrets:
 ```
-MONGODB_URI=mongodb+srv://...
+GOOGLE_APPLICATION_CREDENTIALS_JSON={"type":"service_account"...}
 GOOGLE_CLOUD_PROJECT=your-project-id
 GOOGLE_APPLICATION_CREDENTIALS_JSON={"type":"service_account",...}
 GEMINI_MODEL=gemini-pro
@@ -82,7 +82,7 @@ github-adk-project/
 │   ├── agents/
 │   │   └── interview_agent.py       # Google ADK agent
 │   ├── database/
-│   │   └── mongodb_client.py        # MongoDB operations
+│   │   └── firebase_client.py       # Firestore operations
 │   └── main.py                      # Entry point
 ├── requirements.txt                 # Python dependencies
 ├── Dockerfile                       # Container definition
@@ -124,7 +124,7 @@ source venv/bin/activate
 pip install -r requirements.txt
 
 # Set environment variables
-export MONGODB_URI="mongodb+srv://..."
+export GOOGLE_APPLICATION_CREDENTIALS="path/to/service-account.json"
 export GOOGLE_CLOUD_PROJECT="your-project"
 export GOOGLE_APPLICATION_CREDENTIALS="path/to/service-account.json"
 
@@ -184,7 +184,7 @@ db.interview_topics.find({"topics.technologies": "React"})
 ## 🔐 Security
 
 - **Service Account**: Minimal Vertex AI permissions only
-- **MongoDB**: Railway-managed with connection string authentication
+- **Firestore**: Google-managed with service account authentication
 - **Secrets**: Stored in GitHub repository secrets
 - **No exposed endpoints**: Workflow runs in GitHub's infrastructure
 
@@ -192,7 +192,7 @@ db.interview_topics.find({"topics.technologies": "React"})
 
 ### Success Tracking
 - GitHub Actions execution logs
-- MongoDB document counts by runId
+- Firestore document counts by runId
 - Error alerts via GitHub notifications
 
 ### Scaling Options
@@ -205,7 +205,7 @@ db.interview_topics.find({"topics.technologies": "React"})
 
 **Common Issues:**
 - **Google ADK auth errors**: Verify service account JSON and project ID
-- **MongoDB connection**: Check Railway connection string format
+- **Firestore connection**: Check service account permissions
 - **GitHub Actions timeout**: Increase timeout in workflow YAML
 - **Rate limits**: Implement exponential backoff for Gemini API
 
@@ -222,7 +222,7 @@ db.interview_topics.find({"topics.technologies": "React"})
 
 - [Google ADK Documentation](https://google.github.io/adk-docs/)
 - [GitHub Actions Docs](https://docs.github.com/en/actions)
-- [Railway MongoDB Setup](https://docs.railway.app/databases/mongodb)
+- [Firebase Setup Guide](https://firebase.google.com/docs/firestore/quickstart)
 - [Vertex AI Pricing](https://cloud.google.com/vertex-ai/pricing)
 
 ## 🤝 Contributing
